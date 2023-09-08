@@ -1,21 +1,29 @@
-public class Complex {
-    private double real;
-    private double imag;
+public class Complex implements MatrixElement {
+    private int real;
+    private int imag;
 
     /* Constructors */
-    public Complex(double real, double imag) {
+    public Complex(int real, int imag) {
         this.real = real;
         this.imag = imag;
     }
 
     /* Getters */
-    public double real() {
+    public int real() {
         return real;
     }
-    public double imag() {
+    public int imag() {
         return imag;
     }
 
+    /* Setters */
+    protected void real(int real) {
+        this.real = real;
+    }
+    protected void imag(int imag) {
+        this.imag = imag;
+    }
+    
     /* Machinery */
     @Override
     public String toString() {
@@ -23,12 +31,12 @@ public class Complex {
 
         if (real == 0 && imag == 0) return "0";
         if (real != 0) {
-            builder.append(doubleString(real));
+            builder.append(Integer.toString(real));
             if (0 < imag)
                 builder.append(" + ");
         }
         if (imag != 0) {
-            StringBuilder imagString = new StringBuilder(doubleString(imag));
+            StringBuilder imagString = new StringBuilder(Integer.toString(imag));
             if (imag < 0) {
                 builder.append(" ");
                 imagString.insert(1, " ");
@@ -40,16 +48,13 @@ public class Complex {
 
         return builder.toString();
     }
-    public String doubleString(double a) {
-        return a != Math.round(a) ? Double.toString(a) : Long.toString(Math.round(a));
-    }
     
     @Override
     public boolean equals(Object o) {
         return o instanceof Complex && ((Complex) o).imag == imag && ((Complex) o).real == real;
     }
     
-    public boolean equals(double other) {
+    public boolean equals(int other) {
         return real == other && imag == 0;
     }
 
@@ -58,35 +63,42 @@ public class Complex {
     }
 
     /* Math */
-    public Complex add(Complex other) {
-        return new Complex(
-            this.real + other.real(),
-            this.imag + other.imag()
-        );
-    }
-    public Complex subt(Complex other) {
-        return new Complex(
-            this.real - other.real(),
-            this.imag - other.imag()
-        );
-    }
-    public Complex mult(Complex other) {
-        return new Complex(
-            real * other.real - imag * other.imag,
-            real * other.imag + imag * other.real
-        );
-    }
-    public Complex div(Complex other) {
-        Complex conj = other.conj();
-        double denom = other.mult(conj).real;
-        return mult(conj).divDouble(denom);
-    }
-    
-    private Complex divDouble(double other) {
-        return new Complex(real / other, imag / other);
-    }
-    
     public Complex magSq() {
         return new Complex(real * real + imag * imag, 0);
+    }
+
+    @Override
+    public MatrixElement add(MatrixElement other) {
+        if (other instanceof Complex)
+            return new Complex(real + ((Complex) other).real, imag + ((Complex) other).imag);
+        if (other instanceof Fraction)
+            return other.add(this);
+        return null;
+    }
+
+    @Override
+    public MatrixElement subt(MatrixElement other) {
+        if (other instanceof Complex)
+            return new Complex(real - ((Complex) other).real, imag - ((Complex) other).imag());
+        if (other instanceof Fraction)
+            return Fraction.of((Complex) ((Fraction) other).numer.subt(this.mult(((Fraction) other).denom)), ((Fraction) other).denom).simplify();
+        return null;
+    }
+
+    @Override
+    public MatrixElement div(MatrixElement other) {
+        if (other instanceof Complex)
+            return Fraction.of(this, (Complex) other).simplify();
+        if (other instanceof Fraction)
+            return Fraction.of((Complex) mult(((Fraction) other).denom), ((Fraction) other).numer).simplify();
+        return null;
+    }
+    
+    public MatrixElement mult(MatrixElement other) {
+        if (other instanceof Complex)
+            return new Complex(real * ((Complex) other).real - imag * ((Complex) other).imag, real * ((Complex) other).imag + imag * ((Complex) other).real);
+        if (other instanceof Fraction)
+            return Fraction.of((Complex) mult(((Fraction) other).numer), ((Fraction) other).denom).simplify();
+        return null;
     }
 }
