@@ -5,6 +5,16 @@ public class Matrix {
   public final MatrixElement at(int row, int col) {
     return matrix[row][col];
   }
+  public final Vector atRow(int row) {
+    return Vector.row(matrix[row]);
+  }
+  public final Vector atCol(int col) {
+    return Vector.col(
+      Arrays.stream(matrix)
+        .map(e -> e[col])
+        .toArray(MatrixElement[]::new)
+    );
+  }
   
   public Matrix(MatrixElement[][] matrix) {
     this.matrix = matrix;
@@ -86,18 +96,33 @@ public class Matrix {
     return new Matrix(result);
   }
   
+  public VectorSpace rowSpace() {
+    return new VectorSpace(
+      Arrays.stream(matrix)
+        .map(Vector::row)
+        .toArray(Vector[]::new)
+    );
+  }
+  public VectorSpace columnSpace() {
+    return adj().rowSpace();
+  }
+  
   @Override
   public String toString() {
+    return String.join("\n", strings());
+  }
+  
+  public String[] strings() {
     // Check if this matrix is a matrix of Fractions
     if (matrix[0][0] instanceof Fraction)
-      return fractionToString();
+      return fractionToStrings();
     
     // Check if this matrix is a matrix of Complexes
     if (matrix[0][0] instanceof Complex)
-      return complexToString();
+      return complexToStrings();
     
     // Otherwise, consider this matrix to be a matrix of primitives
-    StringBuilder builder = new StringBuilder();
+    String[] resultStrings = new String[matrix.length];
     
     // Get each string from the primitives in the matrix, and get the maximum width of each column's primitives
     String[][] strings = new String[matrix.length][];
@@ -111,25 +136,25 @@ public class Matrix {
     }
     
     // Append the primitives to the builder
-    for (String[] row : strings) {
-      builder.append("| ");
+    for (int i = 0; i < strings.length; i++) {
+      StringBuilder builder = new StringBuilder("| ");
       
       // Append the primitives to the builder, along with their respective primitive's spacings
-      for (int j = 0; j < row.length; j++) {
-        int spacing = colWidths[j] - row[j].length();
+      for (int j = 0; j < strings[i].length; j++) {
+        int spacing = colWidths[j] - strings[i][j].length();
         builder.append(" ".repeat(spacing / 2))
-          .append(row[j])
+          .append(strings[i][j])
           .append(" ".repeat(((spacing + 1) / 2) + 1));
       }
       
-      builder.append("|\n");
+      resultStrings[i] = builder.toString();
     }
     
-    return builder.toString();
+    return resultStrings;
   }
   
-  private String complexToString() {
-    StringBuilder builder = new StringBuilder();
+  private String[] complexToStrings() {
+    String[] resultStrings = new String[matrix.length];
     
     // Get each string from the complexes in the matrix, and get the maximum width of each column's complexes
     String[][] strings = new String[matrix.length][];
@@ -143,25 +168,25 @@ public class Matrix {
     }
     
     // Append the complexes to the builder
-    for (String[] row : strings) {
-      builder.append("| ");
+    for (int i = 0; i < strings.length; i++) {
+      StringBuilder builder = new StringBuilder("| ");
       
       // Append the complexes to the builder, along with their respective complex's spacings
-      for (int j = 0; j < row.length; j++) {
-        int spacing = colWidths[j] - row[j].length();
+      for (int j = 0; j < strings[i].length; j++) {
+        int spacing = colWidths[j] - strings[i][j].length();
         builder.append(" ".repeat(spacing / 2))
-          .append('(' + row[j] + ')')
+          .append('(' + strings[i][j] + ')')
           .append(" ".repeat(((spacing + 1) / 2) + 1));
       }
       
-      builder.append("|\n");
+      resultStrings[i] = builder.append("|").toString();
     }
     
-    return builder.toString();
+    return resultStrings;
   }
   
-  private String fractionToString() {
-    StringBuilder builder = new StringBuilder();
+  private String[] fractionToStrings() {
+    String[] resultStrings = new String[matrix.length * 2];
     
     // Get each string from the fractions in the matrix, and get the maximum width of each column's fractions
     String[][][] strings = new String[matrix.length][][];
@@ -175,30 +200,31 @@ public class Matrix {
     }
     
     // Append the fractions to the builder
-    for (String[][] row : strings) {
-      builder.append("| ");
+    for (int i = 0; i < strings.length; i++) {
+      StringBuilder builder1 = new StringBuilder("| ");
       
       // Append the numerators to the builder, along with their respective fraction's spacings
-      for (int j = 0; j < row.length; j++) {
-        int spacing = colWidths[j] - row[j][0].length();
-        builder.append(" ".repeat(spacing / 2))
-          .append(row[j][0])
+      for (int j = 0; j < strings[i].length; j++) {
+        int spacing = colWidths[j] - strings[i][j][0].length();
+        builder1.append(" ".repeat(spacing / 2))
+          .append(strings[i][j][0])
           .append(" ".repeat(((spacing + 1) / 2) + 1));
       }
+      resultStrings[2 * i] = builder1.append("|").toString();
       
-      builder.append("|\n| ");
+      builder1.append("|").toString();
       
+      StringBuilder builder2 = new StringBuilder("| ");
       // Append the denominators to the builder, along with their respective fraction's spacings
-      for (int j = 0; j < row.length; j++) {
-        int spacing = colWidths[j] - row[j][0].length();
-        builder.append(" ".repeat(spacing / 2))
-          .append(row[j][1])
+      for (int j = 0; j < strings[i].length; j++) {
+        int spacing = colWidths[j] - strings[i][j][0].length();
+        builder2.append(" ".repeat(spacing / 2))
+          .append(strings[i][j][1])
           .append(" ".repeat(((spacing + 1) / 2) + 1));
       }
-      
-      builder.append("|\n");
+      resultStrings[2 * i + 1] = builder2.append("|").toString();
     }
     
-    return builder.toString();
+    return resultStrings;
   }
 }

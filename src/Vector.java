@@ -27,28 +27,6 @@ public final class Vector extends Matrix {
         this.isColumnVector = isColumnVector;
     }
     
-    /* Machinery */
-    @Override
-    public String toString() {
-        int maxLength = 0;
-        StringBuilder[] valueArr = new StringBuilder[vector.length];
-        for (int i = 0; i < vector.length; i++) {
-            valueArr[i] = new StringBuilder(vector[i].toString());
-            if (maxLength < valueArr[i].length())
-                maxLength = valueArr[i].length();
-        }
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < vector.length; i++) {
-            builder.append("│ ");
-            builder.append(valueArr[i]);
-            for (int spaces = maxLength - valueArr[i].length(); 0 < spaces; spaces--)
-                builder.append(" ");
-            builder.append(" │\n");
-        }
-        return builder.toString();
-    }
-    
     public Vector trans() {
         return new Vector(vector, !isColumnVector);
     }

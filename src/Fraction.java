@@ -22,6 +22,7 @@ public final class Fraction implements MatrixElement {
       throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction((Complex) numer.mult(denom.denom), denom.numer).simplify();
   }
+  
   public static Fraction of(int realNumer, int imagNumer, int realDenom, int imagDenom) {
     if (realDenom == 0 && imagDenom == 0)
       throw new IllegalArgumentException("Denominator cannot be zero");
