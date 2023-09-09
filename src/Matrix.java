@@ -1,39 +1,88 @@
-public class Matrix<T extends MatrixElement> {
-  private T[][] matrix;
+import java.util.Arrays;
+
+public class Matrix {
+  private MatrixElement[][] matrix;
   
-  public Matrix(T[][] matrix) {
+  public Matrix(MatrixElement[][] matrix) {
     this.matrix = matrix;
   }
   
-  public <D extends MatrixElement> Matrix<MatrixElement> mult(Matrix<D> other) {
+  public Matrix mult(Matrix other) {
     // Check if the matrices are compatible
     if (matrix[0].length != other.matrix.length)
       throw new IllegalArgumentException("Matrices are not compatible");
     
-    // Multiply the matrices
+    // Initialize the result matrix
     MatrixElement[][] result = new Fraction[matrix.length][other.matrix[0].length];
     
+    // Multiply the matrices
     for (int i = 0; i < matrix.length; i++)
       for (int j = 0; j < other.matrix[0].length; j++) {
         result[i][j] = Fraction.of(0, 1);
         for (int k = 0; k < matrix[0].length; k++)
           result[i][j] = result[i][j].add(matrix[i][k].mult(other.matrix[k][j]));
       }
-      
-    return new Matrix<MatrixElement>(result);
+    
+    return new Matrix(result);
   }
   
+  public Matrix ref() {
+    // Initialize a copy of the matrix
+    MatrixElement[][] result = Arrays.stream(matrix).map(MatrixElement[]::clone).toArray(MatrixElement[][]::new);
+    
+    // Initialize pivot row and column
+    int pivotRow = 0;
+    int pivotCol = 0;
+    
+    while (pivotRow < matrix.length && pivotCol < matrix[0].length) {
+      // Find the k-th pivot
+      int iMax = pivotRow;
+      for (int i = pivotRow; i < matrix.length; i++)
+        iMax = result[i][pivotCol].compareTo(result[iMax][pivotCol]) > 0 ? i : iMax;
+      
+      // If there is no pivot, skip this column
+      if (result[iMax][pivotCol].equals(0)) {
+        pivotCol++;
+        continue;
+      }
+      
+      // Swap the pivot row with the k-th row
+      swapRows(pivotRow, iMax);
+      
+      for (int i = pivotRow + 1; i < result.length; i++) {
+        // Subtract a multiple of the pivot row from rows below it
+        
+        MatrixElement pivotScale = result[i][pivotCol].div(result[pivotRow][pivotCol]);
+        result[i][pivotCol] = Fraction.of(0, 1);
+        for (int j = pivotCol + 1; j < matrix[i].length; j++)
+          result[i][j] = result[i][j].subt(result[pivotRow][j].mult(pivotScale));
+      }
+      
+      // Increase the pivot row and column
+      pivotRow++;
+      pivotCol++;
+    }
+    
+    return new Matrix(result);
+  }
+  
+  private void swapRows(int row1, int row2) {
+    MatrixElement[] temp = matrix[row1];
+    matrix[row1] = matrix[row2];
+    matrix[row2] = temp;
+  }
+
   @Override
   public String toString() {
-    // Check if T is a Fraction
+    // Check if this matrix is a matrix of Fractions
     if (matrix[0][0] instanceof Fraction)
       return fractionToString();
     
-    // Check if T is a Complex
+    // Check if this matrix is a matrix of Complexes
     if (matrix[0][0] instanceof Complex)
       return complexToString();
     
-    // Otherwise, consider T to be a primitive
+    // Otherwise, consider this matrix to be a matrix of primitives
     StringBuilder builder = new StringBuilder();
     
     // Get each string from the primitives in the matrix, and get the maximum width of each column's primitives
@@ -66,18 +115,15 @@ public class Matrix<T extends MatrixElement> {
   }
   
   private String complexToString() {
-    // Cast the matrix to a Complex matrix
-    Complex[][] cMatrix = (Complex[][]) matrix;
-    
     StringBuilder builder = new StringBuilder();
     
     // Get each string from the complexes in the matrix, and get the maximum width of each column's complexes
-    String[][] strings = new String[cMatrix.length][];
-    int[] colWidths = new int[cMatrix[0].length];
-    for (int i = 0; i < cMatrix.length; i++) {
-      strings[i] = new String[cMatrix[i].length];
-      for (int j = 0; j < cMatrix[i].length; j++) {
-        strings[i][j] = cMatrix[i][j].toString();
+    String[][] strings = new String[matrix.length][];
+    int[] colWidths = new int[matrix[0].length];
+    for (int i = 0; i < matrix.length; i++) {
+      strings[i] = new String[matrix[i].length];
+      for (int j = 0; j < matrix[i].length; j++) {
+        strings[i][j] = ((Complex) matrix[i][j]).toString();
         colWidths[j] = Math.max(colWidths[j], strings[i][j].length());
       }
     }
@@ -101,17 +147,15 @@ public class Matrix<T extends MatrixElement> {
   }
   
   private String fractionToString() {
-    Fraction[][] fMatrix = (Fraction[][]) matrix;
-    
     StringBuilder builder = new StringBuilder();
     
     // Get each string from the fractions in the matrix, and get the maximum width of each column's fractions
-    String[][][] strings = new String[fMatrix.length][][];
-    int[] colWidths = new int[fMatrix[0].length];
-    for (int i = 0; i < fMatrix.length; i++) {
-      strings[i] = new String[fMatrix[i].length][];
-      for (int j = 0; j < fMatrix[i].length; j++) {
-        strings[i][j] = fMatrix[i][j].strings();
+    String[][][] strings = new String[matrix.length][][];
+    int[] colWidths = new int[matrix[0].length];
+    for (int i = 0; i < matrix.length; i++) {
+      strings[i] = new String[matrix[i].length][];
+      for (int j = 0; j < matrix[i].length; j++) {
+        strings[i][j] = ((Fraction) matrix[i][j]).strings();
         colWidths[j] = Math.max(colWidths[j], strings[i][j][0].length());
       }
     }

@@ -61,6 +61,17 @@ public class Main {
             { F(5, 6), F(7, 8) },
             { F(9, 10), F(11, 12) },
         })));
+        
+        System.out.println(M(new Fraction[][] {
+            { F(1, 2), F(3, 4), F(5, 6) },
+            { F(7, 8), F(9, 10), F(11, 12) },
+        }).ref());
+        
+        System.out.println(M(new Fraction[][] {
+            { F(1, 2), F(3, 4) },
+            { F(5, 6), F(7, 8) },
+            { F(9, 10), F(11, 12) },
+        }).ref());
     }
     
     public static Complex C(int r, int i) {
@@ -79,7 +90,11 @@ public class Main {
         return Fraction.of(nr, dr);
     }
     
-    public static Matrix<Fraction> M(Fraction[][] matrix) {
-        return new Matrix<Fraction>(matrix);
+    public static Matrix M(Fraction[][] matrix) {
+        return new Matrix(matrix);
+    }
+    
+    public static void print(String line) {
+        System.out.println(line);
     }
 }

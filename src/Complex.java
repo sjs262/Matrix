@@ -63,8 +63,8 @@ public class Complex implements MatrixElement {
     }
 
     /* Math */
-    public Complex magSq() {
-        return new Complex(real * real + imag * imag, 0);
+    public int magSq() {
+        return real * real + imag * imag;
     }
 
     @Override
@@ -94,11 +94,26 @@ public class Complex implements MatrixElement {
         return null;
     }
     
+    @Override
     public MatrixElement mult(MatrixElement other) {
         if (other instanceof Complex)
             return new Complex(real * ((Complex) other).real - imag * ((Complex) other).imag, real * ((Complex) other).imag + imag * ((Complex) other).real);
         if (other instanceof Fraction)
             return Fraction.of((Complex) mult(((Fraction) other).numer), ((Fraction) other).denom).simplify();
         return null;
+    }
+
+    @Override
+    public int compareTo(MatrixElement other) {
+        double thisMagSqDouble = magSq();
+        
+        if (other instanceof Fraction) {
+            Fraction otherMagSq = ((Fraction) other).magSq();
+            double otherMagSqDouble = ((double) otherMagSq.numer.real()) / ((double) otherMagSq.denom.real());
+            return Double.compare(thisMagSqDouble, otherMagSqDouble);
+        }
+        
+        double otherMagSqDouble = ((Complex) other).magSq();
+        return Double.compare(thisMagSqDouble, otherMagSqDouble);
     }
 }

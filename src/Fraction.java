@@ -5,23 +5,18 @@ public class Fraction implements MatrixElement {
   public static Fraction of(Fraction numer, Fraction denom) {
     return new Fraction((Complex) numer.numer.mult(denom.denom), (Complex) denom.numer.mult(numer.denom)).simplify();
   }
-  
   public static Fraction of(Complex numer, Complex denom) {
     return new Fraction(numer, denom).simplify();
   }
-  
   public static Fraction of(Fraction numer, Complex denom) {
     return new Fraction(numer.numer, (Complex) numer.denom.mult(denom)).simplify();
   }
-  
   public static Fraction of(Complex numer, Fraction denom) {
     return new Fraction((Complex) numer.mult(denom.denom), denom.numer).simplify();
   }
-  
   public static Fraction of(int realNumer, int imagNumer, int realDenom, int imagDenom) {
     return new Fraction(new Complex(realNumer, imagNumer), new Complex(realDenom, imagDenom)).simplify();
   }
-  
   public static Fraction of(int realNumer, int realDenom) {
     return new Fraction(new Complex(realNumer, 0), new Complex(realDenom, 0)).simplify();
   }
@@ -30,6 +25,7 @@ public class Fraction implements MatrixElement {
     this.numer = numer;
     this.denom = denom.equals(0) ? new Complex(1, 0) : denom;
   }
+  
   @Override
   public String toString() {
     return String.join("\n", strings());
@@ -52,10 +48,10 @@ public class Fraction implements MatrixElement {
       denomSpacingLeft = " ".repeat(Math.max(0, numerStr.length() - denomStr.length()) / 2);
       denomSpacingRight = " ".repeat(Math.max(0, numerStr.length() - (denomSpacingLeft + denomStr).length()));
     } else {
-      int nrLen = doubleString(numer.real()).length();
-      int niLen = doubleString(numer.imag()).length() + (numer.imag() != 0 ? 1 : 0);
-      int drLen = doubleString(denom.real()).length();
-      int diLen = doubleString(denom.imag()).length() + (denom.imag() != 0 ? 1 : 0);
+      int nrLen = Integer.toString(numer.real()).length();
+      int niLen = Integer.toString(numer.imag()).length() + (numer.imag() != 0 ? 1 : 0);
+      int drLen = Integer.toString(denom.real()).length();
+      int diLen = Integer.toString(denom.imag()).length() + (denom.imag() != 0 ? 1 : 0);
       
       // Align the add/subtract signs of the numerator and denominator
       numerSpacingLeft = " ".repeat(Math.max(0, drLen - nrLen));
@@ -78,7 +74,7 @@ public class Fraction implements MatrixElement {
     if (denom.imag() != 0) {
       Complex conj = denom.conj();
       newNumer = (Complex) numer.mult(conj);
-      newDenom = denom.magSq();
+      newDenom = new Complex(denom.magSq(), 0);
     }
     return new Fraction(newNumer, newDenom).reduce();
   }
@@ -107,11 +103,16 @@ public class Fraction implements MatrixElement {
     }
     return a;
   }
-
-  public String doubleString(double a) {
-      return a != Math.round(a) ? Double.toString(a) : Long.toString(Math.round(a));
+  
+  @Override
+  public boolean equals(Object o) {
+    return o instanceof Fraction && ((Fraction) o).numer.equals(numer) && ((Fraction) o).denom.equals(denom);
   }
-
+  
+  public boolean equals(int other) {
+    return numer.equals(other) && denom.equals(1);
+  }
+  
   public Fraction magSq() {
     return Fraction.of(numer.magSq(), denom.magSq());
   }
@@ -150,6 +151,21 @@ public class Fraction implements MatrixElement {
     if (other instanceof Complex)
       return Fraction.of((Complex) numer, (Complex) denom.mult((Complex) other)).simplify();
     return null;
+  }
+  
+  @Override
+  public int compareTo(MatrixElement other) {
+      Fraction thisMagSq = magSq();
+      double thisMagSqDouble = ((double) thisMagSq.numer.real()) / ((double) thisMagSq.denom.real());
+      
+      if (other instanceof Fraction) {
+        Fraction otherMagSq = ((Fraction) other).magSq();
+        double otherMagSqDouble = ((double) otherMagSq.numer.real()) / ((double) otherMagSq.denom.real());
+        return Double.compare(thisMagSqDouble, otherMagSqDouble);
+      }
+      
+      double otherMagSqDouble = ((Complex) other).magSq();
+      return Double.compare(thisMagSqDouble, otherMagSqDouble);
   }
 }
 
