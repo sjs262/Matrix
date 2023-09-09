@@ -1,7 +1,10 @@
 import java.util.Arrays;
 
 public class Matrix {
-  private MatrixElement[][] matrix;
+  protected final MatrixElement[][] matrix;
+  public final MatrixElement at(int row, int col) {
+    return matrix[row][col];
+  }
   
   public Matrix(MatrixElement[][] matrix) {
     this.matrix = matrix;
@@ -72,6 +75,17 @@ public class Matrix {
     matrix[row2] = temp;
   }
 
+  // Hermitian adjoint
+  public Matrix adj() {
+    MatrixElement[][] result = new MatrixElement[matrix[0].length][matrix.length];
+    
+    for (int i = 0; i < matrix[0].length; i++)
+      for (int j = 0; j < matrix.length; j++)
+        result[i][j] = matrix[j][i].conj();
+    
+    return new Matrix(result);
+  }
+  
   @Override
   public String toString() {
     // Check if this matrix is a matrix of Fractions

@@ -1,58 +1,45 @@
-import java.util.Iterator;
+import java.util.Arrays;
 
-public class Vector implements Iterable<Complex> {
-    private final Complex[] array;
-    public final int length;
-
-    /* Constructors */
-    public Vector(int length) {
-        this.length = length;
-        array = new Complex[length];
-        for (int i = 0; i < array.length; i++)
-            array[i] = new Complex(0, 0);
+public final class Vector extends Matrix {
+    public final int dim;
+    public final boolean isColumnVector;
+    public final MatrixElement[] vector;
+    public final MatrixElement at(int index) {
+        return vector[index];
     }
-
-    public Vector(Complex[] complexes) {
-        length = complexes.length;
-        this.array = complexes;
+    
+    public static Vector col(MatrixElement[] vector) {
+        return new Vector(vector, true);
     }
-
-    public Vector(double[] reals) {
-        length = reals.length;
-        array = new Complex[reals.length];
-        for (int i = 0; i < array.length; i++)
-            array[i] = new Complex(reals[i], 0);
+    public static Vector row(MatrixElement[] vector) {
+        return new Vector(vector, false);
     }
-
-    /* Getters and Setters */
-    public Complex get(int index) {
-        return array[index];
+    
+    private Vector(MatrixElement[] vector, boolean isColumnVector) {
+        super(
+            isColumnVector ? 
+            Arrays.stream(vector).map(e -> new MatrixElement[] {e}).toArray(MatrixElement[][]::new) :
+            new MatrixElement[][] { vector }
+        );
+        
+        this.vector = vector;
+        dim = vector.length;
+        this.isColumnVector = isColumnVector;
     }
-    public void set(int index, Complex value) {
-        array[index] = value;
-    }
-    public void set(int index, double value) {
-        array[index].setReal(value);
-        array[index].setImag(0);
-    }
-    public void set(Vector vector) throws Exception {
-        if (vector.array.length != array.length) throw new Exception();
-        System.arraycopy(vector.array, 0, array, 0, array.length);
-    }
-
+    
     /* Machinery */
     @Override
     public String toString() {
         int maxLength = 0;
-        StringBuilder[] valueArr = new StringBuilder[array.length];
-        for (int i = 0; i < array.length; i++) {
-            valueArr[i] = new StringBuilder(array[i].toString());
+        StringBuilder[] valueArr = new StringBuilder[vector.length];
+        for (int i = 0; i < vector.length; i++) {
+            valueArr[i] = new StringBuilder(vector[i].toString());
             if (maxLength < valueArr[i].length())
                 maxLength = valueArr[i].length();
         }
 
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
+        for (int i = 0; i < vector.length; i++) {
             builder.append("│ ");
             builder.append(valueArr[i]);
             for (int spaces = maxLength - valueArr[i].length(); 0 < spaces; spaces--)
@@ -61,120 +48,58 @@ public class Vector implements Iterable<Complex> {
         }
         return builder.toString();
     }
-    public Vector copy() {
-        Vector copy = new Vector(length);
-        for (int i = 0; i < length; i++)
-            copy.set(i, array[i].copy());
-        return copy;
+    
+    public Vector trans() {
+        return new Vector(vector, !isColumnVector);
     }
+    
+    // Hermitian adjoint
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Vector) || ((Vector) o).length != length) return false;
-        for (int i = 0; i < length; i++)
-            if (!array[i].equals(((Vector) o).array[i])) return false;
-        return true;
+    public Vector adj() {
+        return new Vector(
+            Arrays.stream(vector)
+                .map(e -> e.conj())
+                .toArray(MatrixElement[]::new),
+            !isColumnVector
+        );
     }
 
-    public Vector transpose() {
-        Vector copy = copy();
-        for (Complex c : copy.array)
-            c.setImag(-c.imag());
-        return copy;
-    }
-
-    //proj of a in the direction of b
-    public static Vector proj(Vector a, Vector b) throws Exception {
-        for (Complex c : b.array) if (c.real() == 0 && c.imag() == 0) throw new Exception();
-        return multiply(b, Complex.divide(dot(a, b), dot(b, b)));
-    }
-    public static Vector proj(Vector a, SolutionSpace span) throws Exception {
-        Matrix mat = span.augment();
-        Matrix tmat = mat.transpose();
-        Matrix.multiply(mat, Matrix.multiply(Matrix.multiply(tmat, mat).inverse(), tmat));
-        return null;
-    }
-
-    public void normalize() {
-        Complex length = new Complex(0, 0);
-        for (Complex complex : array)
-            length.add(Complex.multiply(complex, complex));
-        length.pow(0.5);
-    }
-
-    public boolean isZeroVector() {
-        for (Complex c : array)
-            if (!c.equals(0)) return false;
-        return true;
-    }
-
-    public static Complex dot(Vector left, Vector right) throws Exception {
-        if (left.length != right.length) throw new Exception();
-        Complex output = new Complex(0, 0);
-        for (int index = 0; index < left.length; index++)
-            output.add(Complex.multiply(left.get(index), right.get(index).conj()));
-        return output;
-    }
-    public static Vector cross(Vector left, Vector right) throws Exception {
-        if (left.length != right.length) throw new Exception();
-        return null;
+    public MatrixElement dot(Vector other) {
+        if (dim != other.dim || isColumnVector || !other.isColumnVector)
+            throw new IllegalArgumentException("Vectors are not compatible");
+        return super.mult(other).at(0, 0);
     }
 
     /* Math */
-    public static Vector add(Vector left, Vector right) throws Exception {
-        if (left.length != right.length) throw new Exception();
-        Vector output = new Vector(left.length);
-        for (int i = 0; i < left.length; i++)
-            output.set(i, Complex.add(left.get(i), right.get(i)));
-        return output;
+    public Vector add(Vector other) throws Exception {
+        if (dim != other.dim || isColumnVector != other.isColumnVector)
+            throw new IllegalArgumentException("Vectors are not compatible");
+        MatrixElement[] result = new MatrixElement[dim];
+        for (int i = 0; i < dim; i++)
+            result[i] = vector[i].add(other.at(i));
+        return new Vector(result, isColumnVector);
     }
 
-    public void add(Vector vec) throws Exception {
-        if (length != vec.length) throw new Exception();
-        for (int i = 0; i < length; i++)
-            array[i].add(vec.get(i));
+    public Vector subt(Vector other) throws Exception {
+        if (dim != other.dim || isColumnVector != other.isColumnVector)
+            throw new IllegalArgumentException("Vectors are not compatible");
+        MatrixElement[] result = new MatrixElement[dim];
+        for (int i = 0; i < dim; i++)
+            result[i] = vector[i].subt(other.at(i));
+        return new Vector(result, isColumnVector);
     }
 
-    public static Vector subtract(Vector left, Vector right) throws Exception {
-        if (left.length != right.length) throw new Exception();
-        Vector output = new Vector(left.length);
-        for (int i = 0; i < left.length; i++)
-            output.set(i, Complex.subtract(left.get(i), right.get(i)));
-        return output;
-    }
-    public void subtract(Vector vec) throws Exception {
-        if (length != vec.length) throw new Exception();
-        for (int i = 0; i < length; i++)
-            array[i].subtract(vec.get(i));
+    public Vector mult(MatrixElement other) {
+        MatrixElement[] result = new MatrixElement[dim];
+        for (int i = 0; i < dim; i++)
+            result[i] = vector[i].mult(other);
+        return new Vector(result, isColumnVector);
     }
 
-    public static Vector multiply(Vector vec, Complex c) {
-        Vector output = new Vector(vec.length);
-        for (int i = 0; i < vec.length; i++)
-            output.set(i, Complex.multiply(vec.get(i), c));
-        return output;
-    }
-    public void multiply(Complex other) {
-        for (int i = 0; i < length; i++)
-            array[i].multiply(other);
-    }
-    public void multiply(double other) {
-        for (int i = 0; i < length; i++)
-            array[i].multiply(other);}
-
-    public static Vector divide(Vector vec, Complex c) {
-        Vector output = new Vector(vec.length);
-        for (int i = 0; i < vec.length; i++)
-            output.set(i, Complex.divide(vec.get(i), c));
-        return output;
-    }
-
-    public void divide(Complex c) {
-        for (int i = 0; i < length; i++)
-            array[i].divide(c);
-    }
-
-    @Override
-    public Iterator<Complex> iterator() {
-        return null;
+    public Vector div(MatrixElement other) {
+        MatrixElement[] result = new MatrixElement[dim];
+        for (int i = 0; i < dim; i++)
+            result[i] = vector[i].div(other);
+        return new Vector(result, isColumnVector);
     }
 }

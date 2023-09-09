@@ -53,25 +53,39 @@ public class Main {
         
         // System.out.println(F().simplify());
         
-        System.out.println(M(new Fraction[][] {
-            { F(1, 2), F(3, 4), F(5, 6) },
-            { F(7, 8), F(9, 10), F(11, 12) },
-        }).mult(M(new Fraction[][] {
-            { F(1, 2), F(3, 4) },
-            { F(5, 6), F(7, 8) },
-            { F(9, 10), F(11, 12) },
+        // System.out.println(M(new Fraction[][] {
+        //     { F(1, 2), F(3, 4), F(5, 6) },
+        //     { F(7, 8), F(9, 10), F(11, 12) },
+        // }).mult(M(new Fraction[][] {
+        //     { F(1, 2), F(3, 4) },
+        //     { F(5, 6), F(7, 8) },
+        //     { F(9, 10), F(11, 12) },
+        // })));
+        
+        // System.out.println(M(new Fraction[][] {
+        //     { F(1, 2), F(3, 4), F(5, 6) },
+        //     { F(7, 8), F(9, 10), F(11, 12) },
+        // }).ref());
+        
+        // System.out.println(M(new Fraction[][] {
+        //     { F(1, 2), F(3, 4) },
+        //     { F(5, 6), F(7, 8) },
+        //     { F(9, 10), F(11, 12) },
+        // }).ref());
+        
+        print(Vector.col(new Complex[] {
+            C(1, 2), C(3, 4), C(5, 6)
+        }).mult(Vector.row(new Complex[] {
+            C(1, 2), C(3, 4), C(5, 6)
         })));
         
-        System.out.println(M(new Fraction[][] {
-            { F(1, 2), F(3, 4), F(5, 6) },
-            { F(7, 8), F(9, 10), F(11, 12) },
-        }).ref());
+        print(Vector.row(new Complex[] {
+            C(1, 2), C(3, 4), C(5, 6)
+        }).dot(Vector.col(new Complex[] {
+            C(1, 2), C(3, 4), C(5, 6)
+        })));
         
-        System.out.println(M(new Fraction[][] {
-            { F(1, 2), F(3, 4) },
-            { F(5, 6), F(7, 8) },
-            { F(9, 10), F(11, 12) },
-        }).ref());
+        print(F(C(11, -2), C(25, 0)).conj());
     }
     
     public static Complex C(int r, int i) {
@@ -80,6 +94,10 @@ public class Main {
     
     public static Complex C(int r) {
         return new Complex(r, 0);
+    }
+    
+    public static Fraction F(Complex numer, Complex denom) {
+        return Fraction.of(numer, denom);
     }
     
     public static Fraction F(int nr, int ni, int dr, int di) {
@@ -94,7 +112,11 @@ public class Main {
         return new Matrix(matrix);
     }
     
-    public static void print(String line) {
+    public static Vector V(Fraction[] vector) {
+        return Vector.col(vector);
+    }
+    
+    public static void print(Object line) {
         System.out.println(line);
     }
 }

@@ -5,4 +5,5 @@ public interface MatrixElement extends Comparable<MatrixElement> {
   public abstract MatrixElement div(MatrixElement other);
   public abstract boolean equals(Object o);
   public abstract boolean equals(int other);
+  public abstract MatrixElement conj();
 }

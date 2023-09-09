@@ -1,6 +1,6 @@
-public class Complex implements MatrixElement {
-    private int real;
-    private int imag;
+public final class Complex implements MatrixElement {
+    public final int real;
+    public final int imag;
 
     /* Constructors */
     public Complex(int real, int imag) {
@@ -8,22 +8,6 @@ public class Complex implements MatrixElement {
         this.imag = imag;
     }
 
-    /* Getters */
-    public int real() {
-        return real;
-    }
-    public int imag() {
-        return imag;
-    }
-
-    /* Setters */
-    protected void real(int real) {
-        this.real = real;
-    }
-    protected void imag(int imag) {
-        this.imag = imag;
-    }
-    
     /* Machinery */
     @Override
     public String toString() {
@@ -79,7 +63,7 @@ public class Complex implements MatrixElement {
     @Override
     public MatrixElement subt(MatrixElement other) {
         if (other instanceof Complex)
-            return new Complex(real - ((Complex) other).real, imag - ((Complex) other).imag());
+            return new Complex(real - ((Complex) other).real, imag - ((Complex) other).imag);
         if (other instanceof Fraction)
             return Fraction.of((Complex) ((Fraction) other).numer.subt(this.mult(((Fraction) other).denom)), ((Fraction) other).denom).simplify();
         return null;
@@ -109,7 +93,7 @@ public class Complex implements MatrixElement {
         
         if (other instanceof Fraction) {
             Fraction otherMagSq = ((Fraction) other).magSq();
-            double otherMagSqDouble = ((double) otherMagSq.numer.real()) / ((double) otherMagSq.denom.real());
+            double otherMagSqDouble = ((double) otherMagSq.numer.real) / ((double) otherMagSq.denom.real);
             return Double.compare(thisMagSqDouble, otherMagSqDouble);
         }
         

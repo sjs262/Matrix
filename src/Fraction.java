@@ -1,29 +1,41 @@
-public class Fraction implements MatrixElement {
-  Complex numer;
-  Complex denom;
+public final class Fraction implements MatrixElement {
+  public final Complex numer;
+  public final Complex denom;
   
   public static Fraction of(Fraction numer, Fraction denom) {
+    if (denom.numer.real == 0 && denom.numer.imag == 0)
+      throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction((Complex) numer.numer.mult(denom.denom), (Complex) denom.numer.mult(numer.denom)).simplify();
   }
   public static Fraction of(Complex numer, Complex denom) {
+    if (denom.real == 0 && denom.imag == 0)
+      throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction(numer, denom).simplify();
   }
   public static Fraction of(Fraction numer, Complex denom) {
+    if (denom.real == 0 && denom.imag == 0)
+      throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction(numer.numer, (Complex) numer.denom.mult(denom)).simplify();
   }
   public static Fraction of(Complex numer, Fraction denom) {
+    if (denom.numer.real == 0 && denom.numer.imag == 0)
+      throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction((Complex) numer.mult(denom.denom), denom.numer).simplify();
   }
   public static Fraction of(int realNumer, int imagNumer, int realDenom, int imagDenom) {
+    if (realDenom == 0 && imagDenom == 0)
+      throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction(new Complex(realNumer, imagNumer), new Complex(realDenom, imagDenom)).simplify();
   }
   public static Fraction of(int realNumer, int realDenom) {
+    if (realDenom == 0)
+      throw new IllegalArgumentException("Denominator cannot be zero");
     return new Fraction(new Complex(realNumer, 0), new Complex(realDenom, 0)).simplify();
   }
   
   private Fraction(Complex numer, Complex denom) {
     this.numer = numer;
-    this.denom = denom.equals(0) ? new Complex(1, 0) : denom;
+    this.denom = denom;
   }
   
   @Override
@@ -40,7 +52,7 @@ public class Fraction implements MatrixElement {
     String denomSpacingLeft;
     String denomSpacingRight;
     
-    if (numer.imag() == 0 || denom.imag() == 0 || numer.real() == 0 || denom.real() == 0) {
+    if (numer.imag == 0 || denom.imag == 0 || numer.real == 0 || denom.real == 0) {
       // Center the numerator and demoninator
       numerSpacingLeft = " ".repeat(Math.max(0, denomStr.length() - numerStr.length()) / 2);
       numerSpacingRight = " ".repeat(Math.max(0, denomStr.length() - (numerSpacingLeft + numerStr).length()));
@@ -48,10 +60,10 @@ public class Fraction implements MatrixElement {
       denomSpacingLeft = " ".repeat(Math.max(0, numerStr.length() - denomStr.length()) / 2);
       denomSpacingRight = " ".repeat(Math.max(0, numerStr.length() - (denomSpacingLeft + denomStr).length()));
     } else {
-      int nrLen = Integer.toString(numer.real()).length();
-      int niLen = Integer.toString(numer.imag()).length() + (numer.imag() != 0 ? 1 : 0);
-      int drLen = Integer.toString(denom.real()).length();
-      int diLen = Integer.toString(denom.imag()).length() + (denom.imag() != 0 ? 1 : 0);
+      int nrLen = Integer.toString(numer.real).length();
+      int niLen = Integer.toString(numer.imag).length() + (numer.imag != 0 ? 1 : 0);
+      int drLen = Integer.toString(denom.real).length();
+      int diLen = Integer.toString(denom.imag).length() + (denom.imag != 0 ? 1 : 0);
       
       // Align the add/subtract signs of the numerator and denominator
       numerSpacingLeft = " ".repeat(Math.max(0, drLen - nrLen));
@@ -71,7 +83,7 @@ public class Fraction implements MatrixElement {
     Complex newNumer = numer;
     Complex newDenom = denom;
     
-    if (denom.imag() != 0) {
+    if (denom.imag != 0) {
       Complex conj = denom.conj();
       newNumer = (Complex) numer.mult(conj);
       newDenom = new Complex(denom.magSq(), 0);
@@ -80,16 +92,12 @@ public class Fraction implements MatrixElement {
   }
   
   public Fraction reduce() {
-    // Reduce the fraction
-    Complex newNumer = numer;
-    Complex newDenom = denom;
-    
-    if (numer.real() != 0 && denom.real() != 0) {
-      int gcd = gcd(numer.real(), denom.real());
-      newNumer = new Complex(numer.real() / gcd, numer.imag());
-      newDenom = new Complex(denom.real() / gcd, denom.imag());
-    }
-    return new Fraction(newNumer, newDenom);
+    int gcd = gcd(numer.real, gcd(numer.imag, gcd(denom.real, denom.imag)));
+    assert gcd != 0;
+    return new Fraction(
+      new Complex(numer.real / gcd, numer.imag / gcd),
+      new Complex(denom.real / gcd, denom.imag / gcd)
+    );
   }
   
   private int gcd(int real, int real2) {
@@ -156,16 +164,21 @@ public class Fraction implements MatrixElement {
   @Override
   public int compareTo(MatrixElement other) {
       Fraction thisMagSq = magSq();
-      double thisMagSqDouble = ((double) thisMagSq.numer.real()) / ((double) thisMagSq.denom.real());
+      double thisMagSqDouble = ((double) thisMagSq.numer.real) / ((double) thisMagSq.denom.real);
       
       if (other instanceof Fraction) {
         Fraction otherMagSq = ((Fraction) other).magSq();
-        double otherMagSqDouble = ((double) otherMagSq.numer.real()) / ((double) otherMagSq.denom.real());
+        double otherMagSqDouble = ((double) otherMagSq.numer.real) / ((double) otherMagSq.denom.real);
         return Double.compare(thisMagSqDouble, otherMagSqDouble);
       }
       
       double otherMagSqDouble = ((Complex) other).magSq();
       return Double.compare(thisMagSqDouble, otherMagSqDouble);
+  }
+  @Override
+  public MatrixElement conj() {
+    simplify(); // De-complexify the denominator
+    return new Fraction(numer.conj(), denom);
   }
 }
 
