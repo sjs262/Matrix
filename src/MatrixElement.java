@@ -9,4 +9,6 @@ public interface MatrixElement extends Comparable<MatrixElement> {
   public abstract boolean equals(int other);
   public abstract MatrixElement conj();
   public abstract String[] strings();
+  public double magSq();
+  public double mag();
 }

@@ -12,20 +12,24 @@ public final class Complex implements MatrixElement {
 			this.imag = imag;
 	}
 	
-	/* Complex Unary Ops */
+	/* MatrixElement Unary Ops */
 	
-	public int magSq() {
+	@Override
+	public double magSq() {
 			return real * real + imag * imag;
 	}
 	
-	/* MatrixElement Unary Ops */
+	@Override
+	public double mag() {
+			return Math.sqrt(magSq());
+	}
 	
 	@Override
 	public MatrixElement conj() {
 			return new Complex(real, -imag);
 	}
 	
-	/* Binary Ops */
+	/* MatrixElement Binary Ops */
 	
 	@Override
 	public MatrixElement add(MatrixElement other) {
@@ -90,7 +94,7 @@ public final class Complex implements MatrixElement {
 	
 	@Override
 	public String toString() {
-		return String.join("\n", strings());
+		return strings()[0];
 	}
 	
 	@Override
@@ -101,14 +105,14 @@ public final class Complex implements MatrixElement {
 			builder.append("0");
 		
 		if (real != 0) {
-			builder.append(Integer.toString(real));
+			builder.append(real);
 			if (0 < imag)
 				builder.append("+");
 		}
 		
 		if (imag != 0) {
 			if (imag != 1)
-				builder.append(Integer.toString(imag));
+				builder.append(imag);
 			builder.append("i");
 		}
 		
@@ -124,12 +128,21 @@ public final class Complex implements MatrixElement {
 		if (other instanceof Fraction)
 			return -other.compareTo(this);
 		if (other instanceof Complex)
-			return Integer.compare(magSq(), ((Complex) other).magSq());
+			return Double.compare(magSq(), other.magSq());
 		if (other instanceof IntegerElement)
-			return Integer.compare(magSq(), ((IntegerElement) other).magSq());
+			return Double.compare(magSq(), other.magSq());
 		
 		assert false;
 		return 0;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Complex) {
+			Complex otherComp = (Complex) other;
+			return real == otherComp.real && imag == otherComp.imag;
+		}
+		return false;
 	}
 	
 	@Override
@@ -137,4 +150,10 @@ public final class Complex implements MatrixElement {
 		return real == other && imag == 0;
 	}
 	
+	@Override
+	public int hashCode() {
+		int result = Integer.hashCode(real);
+		result = 31 * result + Integer.hashCode(imag);
+		return result;
+	}
 }

@@ -4,7 +4,7 @@ public final class Vector extends Matrix {
 	public final int dim;
 	public final boolean isColumnVector;
 	public final MatrixElement[] vector;
-	public final MatrixElement at(int index) {
+	public MatrixElement at(int index) {
 			return vector[index];
 	}
 	
@@ -31,7 +31,6 @@ public final class Vector extends Matrix {
 		return new Vector(vector, !isColumnVector);
 	}
 	
-	// Hermitian adjoint
 	@Override
 	public Vector adj() {
 		return new Vector(
@@ -53,7 +52,8 @@ public final class Vector extends Matrix {
 	}
 	
 	/* Math */
-	public Vector add(Vector other) throws Exception {
+	
+	public Vector add(Vector other) {
 		if (dim != other.dim || isColumnVector != other.isColumnVector)
 			throw new IllegalArgumentException("Vectors are not compatible");
 		MatrixElement[] result = new MatrixElement[dim];
@@ -62,7 +62,7 @@ public final class Vector extends Matrix {
 		return new Vector(result, isColumnVector);
 	}
 	
-	public Vector subt(Vector other) throws Exception {
+	public Vector subt(Vector other) {
 		if (dim != other.dim || isColumnVector != other.isColumnVector)
 			throw new IllegalArgumentException("Vectors are not compatible");
 		MatrixElement[] result = new MatrixElement[dim];
@@ -70,18 +70,41 @@ public final class Vector extends Matrix {
 			result[i] = vector[i].subt(other.at(i));
 		return new Vector(result, isColumnVector);
 	}
-
+	
 	public Vector mult(MatrixElement other) {
 		MatrixElement[] result = new MatrixElement[dim];
 		for (int i = 0; i < dim; i++)
 			result[i] = vector[i].mult(other);
 		return new Vector(result, isColumnVector);
 	}
-
+	
 	public Vector div(MatrixElement other) {
 		MatrixElement[] result = new MatrixElement[dim];
 		for (int i = 0; i < dim; i++)
 			result[i] = vector[i].div(other);
 		return new Vector(result, isColumnVector);
+	}
+	
+	/* Norms */
+	
+	public double pNorm(int p) {
+		if (p <= 0)
+			throw new IllegalArgumentException("p must be positive");
+		double sum = 0;
+		for (MatrixElement element: vector)
+			sum += Math.pow(element.mag(), p);
+		return Math.pow(sum, 1.0 / p);
+	}
+	
+	public double infNorm() {
+		double max = 0;
+		for (MatrixElement element : vector)
+			max = Math.max(max, element.mag());
+		return max;
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() * 31 + Boolean.hashCode(isColumnVector);
 	}
 }

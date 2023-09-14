@@ -10,20 +10,24 @@ public class IntegerElement implements MatrixElement {
     this.value = value;
   }
   
-  /* IntegerElement Unary Ops */
+  /* MatrixElement Unary Ops */
   
-  public int magSq() {
+  @Override
+  public double magSq() {
     return value * value;
   }
   
-  /* matrixElement Unary Ops */
+  @Override
+  public double mag() {
+    return Math.sqrt(magSq());
+  }
   
   @Override
   public MatrixElement conj() {
     return new IntegerElement(value);
   }
   
-  /* Binary Ops */
+  /* MatrixElement Binary Ops */
   
   @Override
   public MatrixElement add(MatrixElement other) {
@@ -81,7 +85,7 @@ public class IntegerElement implements MatrixElement {
   
   @Override
   public String toString() {
-    return String.join("\n", strings());
+    return strings()[0];
   }
   
   @Override
@@ -107,7 +111,21 @@ public class IntegerElement implements MatrixElement {
   }
   
   @Override
+  public boolean equals(Object other) {
+    if (other instanceof IntegerElement) {
+      IntegerElement otherInt = (IntegerElement) other;
+      return value == otherInt.value;
+    }
+    return false;
+  }
+  
+  @Override
   public boolean equals(int other) {
     return value == other;
+  }
+  
+  @Override
+  public int hashCode() {
+    return Integer.hashCode(value);
   }
 }

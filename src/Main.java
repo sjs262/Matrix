@@ -1,3 +1,8 @@
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class Main {
 	public static void main(String[] args) {
 		// System.out.println(C(1, 2));
@@ -200,20 +205,47 @@ public class Main {
 		// print(m.inv());
 		// print(m.mult(m.inv()));
 		
-		print(M(new MatrixElement[][] {
-			{ F(1, -2), F(3, 4), F(5, 6) },
-			{ I(1), I(2), I(3)},
-			{ C(5, 6), C(7, 8), C(9, 10) },
-		}).augment(M(new MatrixElement[][] {
-			{F(1, 2), F(3, 4), F(5, 6)},
-			{F(7, 8), F(9, 10), F(11, 12)},
-			{F(13, 14), F(15, 16), F(17, 18)},
-		}).augment(M(new MatrixElement[][] {
-			{ C(1, 2), C(3, 4), C(5, 6) },
-			{ I(1), I(2), I(3)},
-			{ C(5, 6), C(7, 8), C(9, 10) },
-		}))));
+		// print(M(new MatrixElement[][] {
+		// 	{ F(1, -2), F(3, 4), F(5, 6) },
+		// 	{ I(1), I(2), I(3)},
+		// 	{ C(5, 6), C(7, 8), C(9, 10) },
+		// }).augment(M(new MatrixElement[][] {
+		// 	{F(1, 2), F(3, 4), F(5, 6)},
+		// 	{F(7, 8), F(9, 10), F(11, 12)},
+		// 	{F(13, 14), F(15, 16), F(17, 18)},
+		// }).augment(M(new MatrixElement[][] {
+		// 	{ C(1, 2), C(3, 4), C(5, 6) },
+		// 	{ I(1), I(2), I(3)},
+		// 	{ C(5, 6), C(7, 8), C(9, 10) },
+		// }))));
 		
+		// Matrix m = M(new MatrixElement[][] {
+		// 	{ F(1, -2), F(3, 4), F(5, 6) },
+		// 	{ I(1), I(2), I(3) },
+		// 	{ C(5, 6), C(7, 8), C(9, 10) },
+		// 	{ F(1, 2), F(3, 4), F(5, 6) },
+		// 	{ F(7, 8), F(9, 10), F(11, 12) },
+		// 	{ F(13, 14), F(15, 16), F(17, 18) },
+		// 	{ C(1, 2), C(3, 4), C(5, 6) },
+		// 	{ I(1), I(2), I(3) },
+		// 	{ C(5, 6), C(7, 8), C(9, 10) },
+		// });
+		
+		// print(m);
+		// print(m.mult(m.adj()).trace());
+		// print(m.frobNorm());
+		// print(m.pNorm(2));
+		// print(m.rowSpace());
+		
+		Matrix m = M(new MatrixElement[][] {
+			{ I(-3), I(6), I(-1), I(1), I(-7) },
+			{ I(1), I(-2), I(2), I(3), I(-1) },
+			{ I(2), I(-4), I(5), I(8), I(-4) },
+		});
+		print(m);
+		print(m.nullSpace());
+		
+		//
 	}
 	
 	public static Complex C(int r, int i) {
