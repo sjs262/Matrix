@@ -1,7 +1,14 @@
 import java.util.Arrays;
 
 public class Matrix {
+  
+  /* Protected Fields */
   protected final MatrixElement[][] matrix;
+  public final int m;
+  public final int n;
+  
+  /* Reference */
+  
   public final MatrixElement at(int row, int col) {
     return matrix[row][col];
   }
@@ -16,41 +23,60 @@ public class Matrix {
     );
   }
   
-  public Matrix(MatrixElement[][] matrix) {
-    this.matrix = matrix;
-  }
+  /* Factory Methods */
   
-  public Matrix mult(Matrix other) {
-    // Check if the matrices are compatible
-    if (matrix[0].length != other.matrix.length)
-      throw new IllegalArgumentException("Matrices are not compatible");
-    
-    // Initialize the result matrix
-    MatrixElement[][] result = new Fraction[matrix.length][other.matrix[0].length];
-    
-    // Multiply the matrices
+  public static Matrix of(MatrixElement[][] matrix) {
     for (int i = 0; i < matrix.length; i++)
-      for (int j = 0; j < other.matrix[0].length; j++) {
-        result[i][j] = Fraction.of(0, 1);
-        for (int k = 0; k < matrix[0].length; k++)
-          result[i][j] = result[i][j].add(matrix[i][k].mult(other.matrix[k][j]));
-      }
-    
-    return new Matrix(result);
+      if (matrix[0].length != matrix[i].length)
+        throw new IllegalArgumentException("Matrix is not rectangular");
+    return new Matrix(matrix);
+  }
+  public static Matrix of(int[][] matrix) {
+    for (int i = 0; i < matrix.length; i++)
+      if (matrix[0].length != matrix[i].length)
+        throw new IllegalArgumentException("Matrix is not rectangular");
+    return new Matrix(Arrays.stream(matrix)
+      .map(row -> Arrays.stream(row)
+        .mapToObj(i -> Fraction.of(new Complex(i, 0), new Complex(1, 0)))
+        .toArray(MatrixElement[]::new)
+      )
+      .toArray(MatrixElement[][]::new)
+    );
   }
   
+  /* Constructor */
+  
+  protected Matrix(MatrixElement[][] matrix) {
+    this.matrix = matrix;
+    m = matrix.length;
+    n = matrix[0].length;
+  }
+  
+  /* Matrix Row and Column Ops */
+  
+  protected void swapRows(int row1, int row2) {
+    if (!(0 <= row1 && row1 < m && 0 <= row2 && row2 < m))
+      throw new IllegalArgumentException("Rows are out of bounds");
+    MatrixElement[] temp = matrix[row1];
+    matrix[row1] = matrix[row2];
+    matrix[row2] = temp;
+  }
+  
+  /* Matrix Unary Ops */
   public Matrix ref() {
     // Initialize a copy of the matrix
-    MatrixElement[][] result = Arrays.stream(matrix).map(MatrixElement[]::clone).toArray(MatrixElement[][]::new);
+    MatrixElement[][] result = Arrays.stream(matrix)
+      .map(MatrixElement[]::clone)
+      .toArray(MatrixElement[][]::new);
     
     // Initialize pivot row and column
     int pivotRow = 0;
     int pivotCol = 0;
     
-    while (pivotRow < matrix.length && pivotCol < matrix[0].length) {
+    while (pivotRow < m && pivotCol < n) {
       // Find the k-th pivot
       int iMax = pivotRow;
-      for (int i = pivotRow; i < matrix.length; i++)
+      for (int i = pivotRow; i < m; i++)
         iMax = result[i][pivotCol].compareTo(result[iMax][pivotCol]) > 0 ? i : iMax;
       
       // If there is no pivot, skip this column
@@ -62,12 +88,11 @@ public class Matrix {
       // Swap the pivot row with the k-th row
       swapRows(pivotRow, iMax);
       
-      for (int i = pivotRow + 1; i < result.length; i++) {
+      for (int i = pivotRow + 1; i < m; i++) {
         // Subtract a multiple of the pivot row from rows below it
         
         MatrixElement pivotScale = result[i][pivotCol].div(result[pivotRow][pivotCol]);
-        result[i][pivotCol] = Fraction.of(0, 1);
-        for (int j = pivotCol + 1; j < matrix[i].length; j++)
+        for (int j = pivotCol; j < n; j++)
           result[i][j] = result[i][j].subt(result[pivotRow][j].mult(pivotScale));
       }
       
@@ -79,25 +104,84 @@ public class Matrix {
     return new Matrix(result);
   }
   
-  private void swapRows(int row1, int row2) {
-    MatrixElement[] temp = matrix[row1];
-    matrix[row1] = matrix[row2];
-    matrix[row2] = temp;
-  }
-
-  // Hermitian adjoint
-  public Matrix adj() {
-    MatrixElement[][] result = new MatrixElement[matrix[0].length][matrix.length];
+  public Matrix rref() {
+    // Initialize a copy of the matrix
+    MatrixElement[][] result = Arrays.stream(matrix)
+      .map(MatrixElement[]::clone)
+      .toArray(MatrixElement[][]::new);
     
-    for (int i = 0; i < matrix[0].length; i++)
-      for (int j = 0; j < matrix.length; j++)
+    // Initialize pivot row and column
+    int pivotRow = 0;
+    int pivotCol = 0;
+    
+    while (pivotRow < m && pivotCol < n) {
+      // Find the k-th pivot
+      int iMax = pivotRow;
+      for (int i = pivotRow; i < m; i++)
+        iMax = result[i][pivotCol].compareTo(result[iMax][pivotCol]) > 0 ? i : iMax;
+      
+      // If there is no pivot, skip this column
+      if (result[iMax][pivotCol].equals(0)) {
+        pivotCol++;
+        continue;
+      }
+      
+      // Swap the pivot row with the k-th row
+      swapRows(pivotRow, iMax);
+      
+      // Divide the pivot row by the pivot element
+      for (int j = pivotCol; j < n; j++)
+        result[pivotRow][j] = result[pivotRow][j].div(result[pivotRow][pivotCol]);
+      
+      // Subtract a multiple of the pivot row from rows above and below it
+      for (int i = 0; i < m; i++) {
+        if (i == pivotRow) continue;
+        
+        MatrixElement pivotScale = result[i][pivotCol];
+        for (int j = pivotCol; j < n; j++)
+          result[i][j] = result[i][j].subt(result[pivotRow][j].mult(pivotScale));
+      }
+      
+      // Increase the pivot row and column
+      pivotRow++;
+      pivotCol++;
+    }
+    
+    return new Matrix(result);
+  }
+  
+  public Matrix adj() {
+    MatrixElement[][] result = new MatrixElement[n][m];
+    
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < m; j++)
         result[i][j] = matrix[j][i].conj();
     
     return new Matrix(result);
   }
   
+  /* Matrix Binary Ops */
+  
+  public Matrix mult(Matrix other) {
+    // Check if the matrices are compatible
+    if (n != other.m)
+      throw new IllegalArgumentException("Matrices are not compatible");
+    
+    // Initialize the result matrix
+    MatrixElement[][] result = new Fraction[m][other.n];
+    
+    // Multiply the matrices
+    for (int i = 0; i < m; i++)
+      for (int j = 0; j < other.n; j++)
+        result[i][j] = atRow(i).dot(other.atCol(j));
+    
+    return new Matrix(result);
+  }
+  
+  /* Vector Spaces */
+  
   public VectorSpace rowSpace() {
-    return new VectorSpace(
+    return VectorSpace.of(
       Arrays.stream(matrix)
         .map(Vector::row)
         .toArray(Vector[]::new)
@@ -106,6 +190,24 @@ public class Matrix {
   public VectorSpace columnSpace() {
     return adj().rowSpace();
   }
+  public VectorSpace nullSpace() {
+    return null;
+  }
+  
+  public Augment augment(Matrix other) {
+    return Augment.of(this, other);
+  }
+  
+  public Matrix subMatrix(int top, int bottom, int left, int right) {
+    MatrixElement[][] verticalSlice = Arrays.copyOfRange(matrix, top, bottom, MatrixElement[][].class);
+    return new Matrix(
+      Arrays.stream(verticalSlice)
+        .map(row -> Arrays.copyOfRange(row, left, right, MatrixElement[].class))
+        .toArray(MatrixElement[][]::new)
+    );
+  }
+  
+  /* Machinery */
   
   @Override
   public String toString() {
@@ -113,111 +215,40 @@ public class Matrix {
   }
   
   public String[] strings() {
-    // Check if this matrix is a matrix of Fractions
-    if (matrix[0][0] instanceof Fraction)
-      return fractionToStrings();
+    String[] resultStrings = new String[m * 2];
     
-    // Check if this matrix is a matrix of Complexes
-    if (matrix[0][0] instanceof Complex)
-      return complexToStrings();
-    
-    // Otherwise, consider this matrix to be a matrix of primitives
-    String[] resultStrings = new String[matrix.length];
-    
-    // Get each string from the primitives in the matrix, and get the maximum width of each column's primitives
-    String[][] strings = new String[matrix.length][];
-    int[] colWidths = new int[matrix[0].length];
-    for (int i = 0; i < matrix.length; i++) {
-      strings[i] = new String[matrix[i].length];
-      for (int j = 0; j < matrix[i].length; j++) {
-        strings[i][j] = matrix[i][j].toString();
-        colWidths[j] = Math.max(colWidths[j], strings[i][j].length());
+    // Get each string from the elements in the matrix, and get the maximum width of each column's elements
+    String[][][] strings = new String[m][][];
+    int[] colWidths = new int[n];
+    for (int i = 0; i < m; i++) {
+      strings[i] = new String[n][];
+      for (int j = 0; j < n; j++) {
+        strings[i][j] = matrix[i][j].strings();
+        colWidths[j] = Math.max(
+          colWidths[j],
+          strings[i][j][1].length()
+        );
       }
     }
     
-    // Append the primitives to the builder
-    for (int i = 0; i < strings.length; i++) {
-      StringBuilder builder = new StringBuilder("| ");
-      
-      // Append the primitives to the builder, along with their respective primitive's spacings
-      for (int j = 0; j < strings[i].length; j++) {
-        int spacing = colWidths[j] - strings[i][j].length();
-        builder.append(" ".repeat(spacing / 2))
-          .append(strings[i][j])
-          .append(" ".repeat(((spacing + 1) / 2) + 1));
-      }
-      
-      resultStrings[i] = builder.toString();
-    }
-    
-    return resultStrings;
-  }
-  
-  private String[] complexToStrings() {
-    String[] resultStrings = new String[matrix.length];
-    
-    // Get each string from the complexes in the matrix, and get the maximum width of each column's complexes
-    String[][] strings = new String[matrix.length][];
-    int[] colWidths = new int[matrix[0].length];
-    for (int i = 0; i < matrix.length; i++) {
-      strings[i] = new String[matrix[i].length];
-      for (int j = 0; j < matrix[i].length; j++) {
-        strings[i][j] = ((Complex) matrix[i][j]).toString();
-        colWidths[j] = Math.max(colWidths[j], strings[i][j].length());
-      }
-    }
-    
-    // Append the complexes to the builder
-    for (int i = 0; i < strings.length; i++) {
-      StringBuilder builder = new StringBuilder("| ");
-      
-      // Append the complexes to the builder, along with their respective complex's spacings
-      for (int j = 0; j < strings[i].length; j++) {
-        int spacing = colWidths[j] - strings[i][j].length();
-        builder.append(" ".repeat(spacing / 2))
-          .append('(' + strings[i][j] + ')')
-          .append(" ".repeat(((spacing + 1) / 2) + 1));
-      }
-      
-      resultStrings[i] = builder.append("|").toString();
-    }
-    
-    return resultStrings;
-  }
-  
-  private String[] fractionToStrings() {
-    String[] resultStrings = new String[matrix.length * 2];
-    
-    // Get each string from the fractions in the matrix, and get the maximum width of each column's fractions
-    String[][][] strings = new String[matrix.length][][];
-    int[] colWidths = new int[matrix[0].length];
-    for (int i = 0; i < matrix.length; i++) {
-      strings[i] = new String[matrix[i].length][];
-      for (int j = 0; j < matrix[i].length; j++) {
-        strings[i][j] = ((Fraction) matrix[i][j]).strings();
-        colWidths[j] = Math.max(colWidths[j], strings[i][j][0].length());
-      }
-    }
-    
-    // Append the fractions to the builder
-    for (int i = 0; i < strings.length; i++) {
+    // Append the elements to the builder
+    for (int i = 0; i < m; i++) {
       StringBuilder builder1 = new StringBuilder("| ");
       
-      // Append the numerators to the builder, along with their respective fraction's spacings
-      for (int j = 0; j < strings[i].length; j++) {
-        int spacing = colWidths[j] - strings[i][j][0].length();
+      // Append the elements's top strings to the builder, along with their respective spacings
+      for (int j = 0; j < n; j++) {
+        int spacing = colWidths[j] - strings[i][j][1].length();
         builder1.append(" ".repeat(spacing / 2))
           .append(strings[i][j][0])
           .append(" ".repeat(((spacing + 1) / 2) + 1));
       }
       resultStrings[2 * i] = builder1.append("|").toString();
       
-      builder1.append("|").toString();
-      
       StringBuilder builder2 = new StringBuilder("| ");
-      // Append the denominators to the builder, along with their respective fraction's spacings
-      for (int j = 0; j < strings[i].length; j++) {
-        int spacing = colWidths[j] - strings[i][j][0].length();
+      
+      // Append the elements's bottom strings to the builder, along with their respective spacings
+      for (int j = 0; j < n; j++) {
+        int spacing = colWidths[j] - strings[i][j][1].length();
         builder2.append(" ".repeat(spacing / 2))
           .append(strings[i][j][1])
           .append(" ".repeat(((spacing + 1) / 2) + 1));

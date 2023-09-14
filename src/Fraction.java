@@ -2,51 +2,184 @@ public final class Fraction implements MatrixElement {
   public final Complex numer;
   public final Complex denom;
   
-  public static Fraction of(Fraction numer, Fraction denom) {
-    if (denom.numer.real == 0 && denom.numer.imag == 0)
-      throw new IllegalArgumentException("Denominator cannot be zero");
-    return new Fraction((Complex) numer.numer.mult(denom.denom), (Complex) denom.numer.mult(numer.denom)).simplify();
-  }
-  public static Fraction of(Complex numer, Complex denom) {
-    if (denom.real == 0 && denom.imag == 0)
-      throw new IllegalArgumentException("Denominator cannot be zero");
-    return new Fraction(numer, denom).simplify();
-  }
-  public static Fraction of(Fraction numer, Complex denom) {
-    if (denom.real == 0 && denom.imag == 0)
-      throw new IllegalArgumentException("Denominator cannot be zero");
-    return new Fraction(numer.numer, (Complex) numer.denom.mult(denom)).simplify();
-  }
-  public static Fraction of(Complex numer, Fraction denom) {
-    if (denom.numer.real == 0 && denom.numer.imag == 0)
-      throw new IllegalArgumentException("Denominator cannot be zero");
-    return new Fraction((Complex) numer.mult(denom.denom), denom.numer).simplify();
+  public static MatrixElement of(MatrixElement numer, MatrixElement denom) {
+    Complex finalNumer;
+    Complex finalDenom = new Complex(1, 0);
+    
+    if (numer instanceof Fraction) {
+      Fraction numerFrac = (Fraction) numer;
+      finalNumer = numerFrac.numer;
+      finalDenom = numerFrac.denom;
+    } else if (numer instanceof Complex)
+      finalNumer = (Complex) numer;
+    else if (numer instanceof IntegerElement)
+      finalNumer = new Complex(((IntegerElement) numer).value, 0);
+    else {
+      assert false;
+      return null;
+    }
+    
+    if (denom instanceof Fraction) {
+      Fraction denomFrac = (Fraction) denom;
+      finalNumer = (Complex) finalNumer.mult(denomFrac.denom);
+      finalDenom = (Complex) finalDenom.mult(denomFrac.numer);
+    } else if (denom instanceof Complex)
+      finalDenom = (Complex) finalDenom.mult(denom);
+    else if (denom instanceof IntegerElement)
+      finalDenom = (Complex) finalDenom.mult(denom);
+    else {
+      assert false;
+      return null;
+    }
+    
+    if (finalDenom.equals(0))
+      throw new ArithmeticException("Division by zero");
+    
+    return new Fraction(finalNumer, finalDenom).simplify();
+    
   }
   
-  public static Fraction of(int realNumer, int imagNumer, int realDenom, int imagDenom) {
-    if (realDenom == 0 && imagDenom == 0)
-      throw new IllegalArgumentException("Denominator cannot be zero");
-    return new Fraction(new Complex(realNumer, imagNumer), new Complex(realDenom, imagDenom)).simplify();
-  }
-  public static Fraction of(int realNumer, int realDenom) {
-    if (realDenom == 0)
-      throw new IllegalArgumentException("Denominator cannot be zero");
-    return new Fraction(new Complex(realNumer, 0), new Complex(realDenom, 0)).simplify();
-  }
+  /* Constructor */
   
   private Fraction(Complex numer, Complex denom) {
     this.numer = numer;
     this.denom = denom;
   }
   
+  /* Fraction Unary Ops */
+  
+  public double magSq() {
+    return (double) numer.magSq() / (double) denom.magSq();
+  }
+  
+  public MatrixElement simplify() {
+    // De-complexify the denominator
+    Complex newNumer = numer;
+    Complex newDenom = denom;
+    
+    if (denom.imag != 0) {
+      MatrixElement conj = denom.conj();
+      newNumer = (Complex) numer.mult(conj);
+      newDenom = new Complex(denom.magSq(), 0);
+    }
+    return new Fraction(newNumer, newDenom).reduce();
+  }
+  
+  public MatrixElement reduce() {
+    int gcd = gcd(numer.real, gcd(numer.imag, gcd(denom.real, denom.imag)));
+    assert gcd != 0;
+    
+    // I prefer the sign to be on the numerator
+    if (denom.real < 0 && numer.real > 0)
+      gcd *= -1;
+    
+    Complex newNumer = new Complex(numer.real / gcd, numer.imag / gcd);
+    Complex newDenom = new Complex(denom.real / gcd, denom.imag / gcd);
+    
+    if (newDenom.equals(1)) {
+      if (newNumer.imag == 0)
+        return new IntegerElement(newNumer.real);
+      return newNumer;
+    }
+    return new Fraction(newNumer, newDenom);
+  }
+  
+  private int gcd(int real, int real2) {
+    // Euclidean algorithm
+    int a = Math.max(real, real2);
+    int b = Math.min(real, real2);
+    while (b != 0) {
+      int t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
+  
+  /* MatrixElement Unary Ops */
+  
+  @Override
+  public MatrixElement conj() {
+    return numer.conj().div(denom.conj());
+  }
+  
+  /* Binary Ops */
+  
+  @Override
+  public MatrixElement add(MatrixElement other) {
+    if (other instanceof Fraction) {
+      Fraction otherFrac = (Fraction) other;
+      return Fraction.of(
+        numer.mult(otherFrac.denom).add(denom.mult(otherFrac.numer)),
+        denom.mult(otherFrac.denom)
+      );
+    }
+    
+    return Fraction.of(
+      numer.add(other.mult(denom)),
+      denom
+    );
+  }
+  
+  @Override
+  public MatrixElement subt(MatrixElement other) {
+    if (other instanceof Fraction) {
+      Fraction otherFrac = (Fraction) other;
+      return Fraction.of(
+        numer.mult(otherFrac.denom).subt(denom.mult(otherFrac.numer)),
+        denom.mult(otherFrac.denom)
+      );
+    }
+    
+    return Fraction.of(
+      numer.subt(other.mult(denom)),
+      denom
+    );
+  }
+  
+  @Override
+  public MatrixElement mult(MatrixElement other) {
+    if (other instanceof Fraction) {
+      Fraction otherFrac = (Fraction) other;
+      return Fraction.of(
+        numer.mult(otherFrac.numer),
+        denom.mult(otherFrac.denom)
+      );
+    }
+    
+    return Fraction.of(
+      numer.mult(other),
+      denom
+    );
+  }
+  
+  @Override
+  public MatrixElement div(MatrixElement other) {
+    if (other instanceof Fraction) {
+      Fraction otherFrac = (Fraction) other;
+      return Fraction.of(
+        numer.mult(otherFrac.denom),
+        denom.mult(otherFrac.numer)
+      );
+    }
+    
+    return Fraction.of(
+      numer,
+      denom.mult(other)
+    );
+  }
+  
+  /* Machinery */
+  
   @Override
   public String toString() {
     return String.join("\n", strings());
   }
   
+  @Override
   public String[] strings() {
-    String numerStr = numer.toString();
-    String denomStr = denom.toString();
+    String numerStr = numer.strings()[0];
+    String denomStr = denom.strings()[0];
     
     String numerSpacingLeft;
     String numerSpacingRight;
@@ -74,112 +207,25 @@ public final class Fraction implements MatrixElement {
       denomSpacingRight = " ".repeat(Math.max(0, niLen - diLen));
     }
     return new String[] {
-      "\u001B[4m" + numerSpacingLeft + numer + numerSpacingRight + "\u001B[0m",
-                    denomSpacingLeft + denom + denomSpacingRight
+      "\u001B[4m" + numerSpacingLeft + numerStr + numerSpacingRight + "\u001B[0m",
+                    denomSpacingLeft + denomStr + denomSpacingRight
     };
   }
   
-  public Fraction simplify() {
-    // De-complexify the denominator
-    Complex newNumer = numer;
-    Complex newDenom = denom;
-    
-    if (denom.imag != 0) {
-      Complex conj = denom.conj();
-      newNumer = (Complex) numer.mult(conj);
-      newDenom = new Complex(denom.magSq(), 0);
-    }
-    return new Fraction(newNumer, newDenom).reduce();
-  }
-  
-  public Fraction reduce() {
-    int gcd = gcd(numer.real, gcd(numer.imag, gcd(denom.real, denom.imag)));
-    assert gcd != 0;
-    return new Fraction(
-      new Complex(numer.real / gcd, numer.imag / gcd),
-      new Complex(denom.real / gcd, denom.imag / gcd)
-    );
-  }
-  
-  private int gcd(int real, int real2) {
-    // Euclidean algorithm
-    int a = Math.max(real, real2);
-    int b = Math.min(real, real2);
-    while (b != 0) {
-      int t = b;
-      b = a % b;
-      a = t;
-    }
-    return a;
-  }
-  
   @Override
-  public boolean equals(Object o) {
-    return o instanceof Fraction && ((Fraction) o).numer.equals(numer) && ((Fraction) o).denom.equals(denom);
+  public int compareTo(MatrixElement other) {
+    if (other instanceof Fraction)
+      return Double.compare(magSq(), ((Fraction) other).magSq());
+    if (other instanceof Complex)
+      return Double.compare(magSq(), ((Complex) other).magSq());
+    if (other instanceof IntegerElement)
+      return Double.compare(magSq(), ((IntegerElement) other).magSq());
+    
+    assert false;
+    return 0;
   }
   
   public boolean equals(int other) {
     return numer.equals(other) && denom.equals(1);
   }
-  
-  public Fraction magSq() {
-    return Fraction.of(numer.magSq(), denom.magSq());
-  }
-  
-  @Override
-  public MatrixElement mult(MatrixElement other) {
-    if (other instanceof Fraction)
-      return Fraction.of((Complex) numer.mult(((Fraction) other).numer), (Complex) denom.mult(((Fraction) other).denom)).simplify();
-    if (other instanceof Complex)
-      return new Fraction((Complex) numer.mult(((Complex) other)), denom).simplify();
-    return null;
-  }
-
-  @Override
-  public MatrixElement add(MatrixElement other) {
-    if (other instanceof Fraction)
-      return Fraction.of((Complex) numer.mult(((Fraction) other).denom).add(((Fraction) other).numer.mult(denom)), (Complex) denom.mult(((Fraction) other).denom)).simplify();
-    if (other instanceof Complex)
-      return Fraction.of((Complex) numer.add(((Complex) other).mult(denom)), denom).simplify();
-    return null;
-  }
-
-  @Override
-  public MatrixElement subt(MatrixElement other) {
-    if (other instanceof Fraction)
-      return Fraction.of((Complex) numer.mult(((Fraction) other).denom).subt(((Fraction) other).numer.mult(denom)), (Complex) denom.mult(((Fraction) other).denom)).simplify();
-    if (other instanceof Complex)
-      return Fraction.of((Complex) numer.subt(((Complex) other).mult(denom)), denom).simplify();
-    return null;
-  }
-
-  @Override
-  public MatrixElement div(MatrixElement other) {
-    if (other instanceof Fraction)
-      return Fraction.of((Complex) numer.mult(((Fraction) other).denom), (Complex) denom.mult(((Fraction) other).numer)).simplify();
-    if (other instanceof Complex)
-      return Fraction.of((Complex) numer, (Complex) denom.mult((Complex) other)).simplify();
-    return null;
-  }
-  
-  @Override
-  public int compareTo(MatrixElement other) {
-      Fraction thisMagSq = magSq();
-      double thisMagSqDouble = ((double) thisMagSq.numer.real) / ((double) thisMagSq.denom.real);
-      
-      if (other instanceof Fraction) {
-        Fraction otherMagSq = ((Fraction) other).magSq();
-        double otherMagSqDouble = ((double) otherMagSq.numer.real) / ((double) otherMagSq.denom.real);
-        return Double.compare(thisMagSqDouble, otherMagSqDouble);
-      }
-      
-      double otherMagSqDouble = ((Complex) other).magSq();
-      return Double.compare(thisMagSqDouble, otherMagSqDouble);
-  }
-  @Override
-  public MatrixElement conj() {
-    simplify(); // De-complexify the denominator
-    return new Fraction(numer.conj(), denom);
-  }
 }
-
