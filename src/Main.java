@@ -175,50 +175,80 @@ public class Main {
 		//     {F(13, 14), F(15, 16), F(17, 18)},
 		// }));
 		
+		// print(M(new MatrixElement[][] {
+		// 		{ F(1, -2), F(3, 4), F(5, 6) },
+		// 		{ I(1), I(2), I(3)},
+		// 		{ C(5, 6), C(7, 8), C(9, 10) },
+		// }).augment(M(new MatrixElement[][] {
+		// 		{F(1, 2), F(3, 4), F(5, 6)},
+		// 		{F(7, 8), F(9, 10), F(11, 12)},
+		// 		{F(13, 14), F(15, 16), F(17, 18)},
+		// })).ref());
+		
+		// Matrix m = M(new MatrixElement[][] {
+		// 	{ F(1, -2), F(3, 4), F(5, 6) },
+		// 	{ I(1), I(2), I(3)},
+		// 	{ C(5, 6), C(7, 8), C(9, 10) }
+		// });
+		
+		// Matrix m = M(new MatrixElement[][] {
+		// 	{ I(1), I(2), I(3) },
+		// 	{ I(0), I(1), I(4)},
+		// 	{ I(5), I(6), I(0) }
+		// });
+		// print(m);
+		// print(m.inv());
+		// print(m.mult(m.inv()));
+		
 		print(M(new MatrixElement[][] {
-				{ F(1, -2), F(3, 4), F(5, 6) },
-				{ I(1), I(2), I(3)},
-				{ C(5, 6), C(7, 8), C(9, 10) },
+			{ F(1, -2), F(3, 4), F(5, 6) },
+			{ I(1), I(2), I(3)},
+			{ C(5, 6), C(7, 8), C(9, 10) },
 		}).augment(M(new MatrixElement[][] {
-				{F(1, 2), F(3, 4), F(5, 6)},
-				{F(7, 8), F(9, 10), F(11, 12)},
-				{F(13, 14), F(15, 16), F(17, 18)},
-		})).ref());
+			{F(1, 2), F(3, 4), F(5, 6)},
+			{F(7, 8), F(9, 10), F(11, 12)},
+			{F(13, 14), F(15, 16), F(17, 18)},
+		}).augment(M(new MatrixElement[][] {
+			{ C(1, 2), C(3, 4), C(5, 6) },
+			{ I(1), I(2), I(3)},
+			{ C(5, 6), C(7, 8), C(9, 10) },
+		}))));
+		
 	}
 	
 	public static Complex C(int r, int i) {
-			return new Complex(r, i);
+		return new Complex(r, i);
 	}
 	
 	public static MatrixElement F(MatrixElement numer, MatrixElement denom) {
-			return Fraction.of(numer, denom);
+		return Fraction.of(numer, denom);
 	}
 	
 	public static MatrixElement F(int nr, int ni, int dr, int di) {
-			return Fraction.of(new Complex(nr, ni), new Complex(dr, di));
+		return Fraction.of(new Complex(nr, ni), new Complex(dr, di));
 	}
 	
 	public static MatrixElement F(int nr, int dr) {
-			return Fraction.of(new Complex(nr, 0), new Complex(dr, 0));
+		return Fraction.of(new Complex(nr, 0), new Complex(dr, 0));
 	}
 	
 	public static Complex C(int nr) {
-			return new Complex(nr, 0);
+		return new Complex(nr, 0);
 	}
 	
 	public static Matrix M(MatrixElement[][] matrix) {
-			return Matrix.of(matrix);
+		return Matrix.of(matrix);
 	}
 	
 	public static Vector V(MatrixElement[] vector) {
-			return Vector.col(vector);
+		return Vector.col(vector);
 	}
 	
 	public static IntegerElement I(int value) {
-			return new IntegerElement(value);
+		return new IntegerElement(value);
 	}
 	
 	public static void print(Object line) {
-			System.out.println(line);
+		System.out.println(line);
 	}
 }

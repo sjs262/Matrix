@@ -1,4 +1,7 @@
 public final class Complex implements MatrixElement {
+	
+	/* Immutable Public Fields */
+	
 	public final int real;
 	public final int imag;
 	

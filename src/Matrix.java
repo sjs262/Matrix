@@ -3,7 +3,11 @@ import java.util.Arrays;
 public class Matrix {
   
   /* Protected Fields */
+  
   protected final MatrixElement[][] matrix;
+  
+  /* Immutable Public Fields */
+  
   public final int m;
   public final int n;
   
@@ -43,6 +47,13 @@ public class Matrix {
       .toArray(MatrixElement[][]::new)
     );
   }
+  public static Matrix identity(int m) {
+    MatrixElement[][] result = new MatrixElement[m][m];
+    for (int i = 0; i < m; i++)
+      for (int j = 0; j < m; j++)
+        result[i][j] = i == j ? new IntegerElement(1) : new IntegerElement(0);
+    return new Matrix(result);
+  }
   
   /* Constructor */
   
@@ -63,6 +74,7 @@ public class Matrix {
   }
   
   /* Matrix Unary Ops */
+  
   public Matrix ref() {
     // Initialize a copy of the matrix
     MatrixElement[][] result = Arrays.stream(matrix)
@@ -103,7 +115,6 @@ public class Matrix {
     
     return new Matrix(result);
   }
-  
   public Matrix rref() {
     // Initialize a copy of the matrix
     MatrixElement[][] result = Arrays.stream(matrix)
@@ -149,7 +160,6 @@ public class Matrix {
     
     return new Matrix(result);
   }
-  
   public Matrix adj() {
     MatrixElement[][] result = new MatrixElement[n][m];
     
@@ -158,6 +168,9 @@ public class Matrix {
         result[i][j] = matrix[j][i].conj();
     
     return new Matrix(result);
+  }
+  public Matrix inv() {
+    return ((Augment) augment(identity(m)).rref()).getRight();
   }
   
   /* Matrix Binary Ops */
@@ -168,7 +181,7 @@ public class Matrix {
       throw new IllegalArgumentException("Matrices are not compatible");
     
     // Initialize the result matrix
-    MatrixElement[][] result = new Fraction[m][other.n];
+    MatrixElement[][] result = new MatrixElement[m][other.n];
     
     // Multiply the matrices
     for (int i = 0; i < m; i++)

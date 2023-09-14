@@ -1,5 +1,7 @@
 public class IntegerElement implements MatrixElement {
   
+  /* Immutable Public Fields */
+  
   public final int value;
   
   /* Constructor */

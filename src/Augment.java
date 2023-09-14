@@ -3,6 +3,14 @@ public class Augment extends Matrix {
   private final Matrix right;
   private final int split;
   
+  public Matrix getLeft() {
+    return left;
+  }
+  
+  public Matrix getRight() {
+    return right;
+  }
+  
   public static Augment of(Matrix left, Matrix right) {
     if (left.m != right.m)
       throw new IllegalArgumentException("Matrices must have the same number of rows");
@@ -33,6 +41,14 @@ public class Augment extends Matrix {
   @Override
   public Matrix ref() {
     Matrix result = super.ref();
+    Matrix left = result.subMatrix(0, m, 0, split);
+    Matrix right = result.subMatrix(0, m, split, n);
+    return Augment.of(left, right);
+  }
+  
+  @Override
+  public Matrix rref() {
+    Matrix result = super.rref();
     Matrix left = result.subMatrix(0, m, 0, split);
     Matrix right = result.subMatrix(0, m, split, n);
     return Augment.of(left, right);
