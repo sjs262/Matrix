@@ -266,7 +266,7 @@ public class Matrix {
 		return 0;
 	}
 	
-	/* Vector Spaces */
+	/* The 4 Subspaces */
 	
 	public VectorSpace rowSpace() {
 		return VectorSpace.of(
@@ -308,6 +308,9 @@ public class Matrix {
 				.map(Vector::trans)
 				.toArray(Vector[]::new)
 		);
+	}
+	public VectorSpace leftHandNullSpace() {
+		return adj().nullSpace();
 	}
 	
 	public Augment augment(Matrix other) {
