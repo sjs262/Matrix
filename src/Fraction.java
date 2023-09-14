@@ -1,6 +1,11 @@
 public final class Fraction implements MatrixElement {
+  
+  /* Immutable Public Fields */
+  
   public final Complex numer;
   public final Complex denom;
+  
+  /* Factory Methods */
   
   public static MatrixElement of(MatrixElement numer, MatrixElement denom) {
     Complex finalNumer;
@@ -36,7 +41,6 @@ public final class Fraction implements MatrixElement {
       throw new ArithmeticException("Division by zero");
     
     return new Fraction(finalNumer, finalDenom).simplify();
-    
   }
   
   /* Constructor */
