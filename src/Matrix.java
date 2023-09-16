@@ -12,7 +12,7 @@ public class Matrix {
 	public final int m;
 	public final int n;
 	
-	/* Reference */
+	/* Reference mMethods */
 	
 	public final MatrixElement at(int row, int col) {
 		return matrix[row][col];
@@ -83,11 +83,16 @@ public class Matrix {
 	}
 	
 	/* Matrix Unary Ops */
+	private <V> void print2d(V[][] a) {
+		for (V[] v : a) {
+			System.out.println(Arrays.toString(v));
+		}
+	}
 	
 	public Matrix ref() {
 		// Initialize a copy of the matrix
 		MatrixElement[][] result = Arrays.stream(matrix)
-			.map(MatrixElement[]::clone)
+			.map(row -> Arrays.copyOf(row, n, MatrixElement[].class))
 			.toArray(MatrixElement[][]::new);
 		
 		// Initialize pivot row and column
@@ -96,18 +101,16 @@ public class Matrix {
 		
 		while (pivotRow < m && pivotCol < n) {
 			// Find the k-th pivot
-			int iMax = pivotRow;
-			for (int i = pivotRow; i < m; i++)
-				iMax = result[i][pivotCol].compareTo(result[iMax][pivotCol]) > 0 ? i : iMax;
+			// Swap row below it until the pivot element is nonzero
+			
+			for (int i = pivotRow + 1; result[pivotRow][pivotCol].equals(0) && i < m; i++)
+				swapRows(result, pivotRow, i);
 			
 			// If there is no pivot, skip this column
-			if (result[iMax][pivotCol].equals(0)) {
+			if (result[pivotRow][pivotCol].equals(0)) {
 				pivotCol++;
 				continue;
 			}
-			
-			// Swap the pivot row with the k-th row
-			swapRows(result, pivotRow, iMax);
 			
 			for (int i = pivotRow + 1; i < m; i++) {
 				// Subtract a multiple of the pivot row from rows below it
@@ -127,7 +130,7 @@ public class Matrix {
 	public Matrix rref() {
 		// Initialize a copy of the matrix
 		MatrixElement[][] result = Arrays.stream(matrix)
-			.map(MatrixElement[]::clone)
+			.map(row -> Arrays.copyOf(row, n, MatrixElement[].class))
 			.toArray(MatrixElement[][]::new);
 		
 		// Initialize pivot row and column
@@ -135,20 +138,17 @@ public class Matrix {
 		int pivotCol = 0;
 		
 		while (pivotRow < m && pivotCol < n) {
-			
 			// Find the k-th pivot
-			int iMax = pivotRow;
-			for (int i = pivotRow; i < m; i++)
-				iMax = result[i][pivotCol].compareTo(result[iMax][pivotCol]) > 0 ? i : iMax;
+			// Swap row below it until the pivot element is nonzero
+			
+			for (int i = pivotRow + 1; result[pivotRow][pivotCol].equals(0) && i < m; i++)
+				swapRows(result, pivotRow, i);
 			
 			// If there is no pivot, skip this column
-			if (result[iMax][pivotCol].equals(0)) {
+			if (result[pivotRow][pivotCol].equals(0)) {
 				pivotCol++;
 				continue;
 			}
-			
-			// Swap the pivot row with the k-th row
-			swapRows(result, pivotRow, iMax);
 			
 			// Divide the pivot row by the pivot element
 			for (int j = n - 1; j >= pivotCol; j--)
@@ -200,6 +200,36 @@ public class Matrix {
 	
 	/* Matrix Binary Ops */
 	
+	public Matrix add(Matrix other) {
+		// Check if the matrices are compatible
+		if (m != other.m || n != other.n)
+			throw new IllegalArgumentException("Matrices are not compatible");
+		
+		// Initialize the result matrix
+		MatrixElement[][] result = new MatrixElement[m][n];
+		
+		// Add the matrices
+		for (int i = 0; i < m; i++)
+			for (int j = 0; j < n; j++)
+				result[i][j] = at(i, j).add(other.at(i, j));
+		
+		return new Matrix(result);
+	}
+	public Matrix subt(Matrix other) {
+		// Check if the matrices are compatible
+		if (m != other.m || n != other.n)
+			throw new IllegalArgumentException("Matrices are not compatible");
+		
+		// Initialize the result matrix
+		MatrixElement[][] result = new MatrixElement[m][n];
+		
+		// Subtract the matrices
+		for (int i = 0; i < m; i++)
+			for (int j = 0; j < n; j++)
+				result[i][j] = at(i, j).subt(other.at(i, j));
+		
+		return new Matrix(result);
+	}
 	public Matrix mult(Matrix other) {
 		// Check if the matrices are compatible
 		if (n != other.m)
@@ -212,6 +242,17 @@ public class Matrix {
 		for (int i = 0; i < m; i++)
 			for (int j = 0; j < other.n; j++)
 				result[i][j] = atRow(i).dot(other.atCol(j));
+		
+		return new Matrix(result);
+	}
+	public Matrix mult(MatrixElement other) {
+		// Initialize the result matrix
+		MatrixElement[][] result = new MatrixElement[m][n];
+		
+		// Multiply the matrix by the scalar
+		for (int i = 0; i < m; i++)
+			for (int j = 0; j < n; j++)
+				result[i][j] = at(i, j).mult(other);
 		
 		return new Matrix(result);
 	}
@@ -235,7 +276,6 @@ public class Matrix {
 				throw new IllegalArgumentException("p must be 1 or 2");
 		}
 	}
-	
 	public double infNorm() {
 		// Maximum absolute column sum
 		return Arrays.stream(rows())
@@ -243,7 +283,6 @@ public class Matrix {
 			.max(Double::compare)
 			.get();
 	}
-	
 	public double frobNorm() {
 		MatrixElement sum = new IntegerElement(0);
 		for (int i = 0; i < m && i < n; i++)
@@ -313,10 +352,30 @@ public class Matrix {
 		return adj().nullSpace();
 	}
 	
+	/* Decompositions */
+	
+	public void svd() {
+		// A = UΣV*
+		// A*A = V(Σ^2)(V*)
+		// AA* = U(Σ^2)(U*)
+		Matrix AAst = mult(adj()).ref();
+		MatrixElement[] AAstEigVals = AAst.diagonalElements();
+		System.out.println(Arrays.toString(AAstEigVals));
+		
+		Matrix AstA = adj().mult(this).ref();
+		MatrixElement[] AstAEigVals = AstA.diagonalElements();
+		System.out.println(Arrays.toString(AstAEigVals));
+		VectorSpace[] AstAnullspaces = Arrays.stream(AstAEigVals)
+			.map(e -> AstA.subt(identity(n).mult(e)).nullSpace())
+			.toArray(VectorSpace[]::new);
+		System.out.println(Arrays.toString(AstAnullspaces));
+	}
+	
+	/* Utility Methods */
+	
 	public Augment augment(Matrix other) {
 		return Augment.of(this, other);
 	}
-	
 	protected Matrix subMatrix(int top, int bottom, int left, int right) {
 		MatrixElement[][] verticalSlice = Arrays.copyOfRange(matrix, top, bottom, MatrixElement[][].class);
 		return new Matrix(
@@ -325,6 +384,12 @@ public class Matrix {
 				.toArray(MatrixElement[][]::new)
 		);
 	}
+	private MatrixElement[] diagonalElements() {
+		MatrixElement[] result = new MatrixElement[Math.min(m, n)];
+		for (int i = 0; i < result.length; i++)
+			result[i] = at(i, i);
+		return result;
+	}
 	
 	/* Machinery */
 	
@@ -332,7 +397,6 @@ public class Matrix {
 	public String toString() {
 		return String.join("\n", strings());
 	}
-	
 	public String[] strings() {
 		String[] resultStrings = new String[m * 2];
 		
@@ -377,7 +441,6 @@ public class Matrix {
 		
 		return resultStrings;
 	}
-	
 	@Override
 	public boolean equals(Object other) {
 		if (!(other instanceof Matrix))
@@ -393,7 +456,6 @@ public class Matrix {
 		
 		return true;
 	}
-	
 	@Override
 	public int hashCode() {
 		int result = Objects.hash(m, n);

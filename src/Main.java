@@ -242,9 +242,16 @@ public class Main {
 			{ I(1), I(-2), I(2), I(3), I(-1) },
 			{ I(2), I(-4), I(5), I(8), I(-4) },
 		});
-		print(m);
+		print(m.rref());
 		print(m.nullSpace());
 		
+		Matrix m2 = M(new MatrixElement[][] {
+			{ I(0), I(1) },
+			{ I(-2), I(3) },
+		});
+		print(m2 + "\n");
+		print(m2.ref() + "\n");
+		print(m2.rref() + "\n");
 		//
 	}
 	

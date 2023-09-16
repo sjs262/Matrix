@@ -18,12 +18,10 @@ public final class Complex implements MatrixElement {
 	public double magSq() {
 			return real * real + imag * imag;
 	}
-	
 	@Override
 	public double mag() {
 			return Math.sqrt(magSq());
 	}
-	
 	@Override
 	public MatrixElement conj() {
 			return new Complex(real, -imag);
@@ -48,7 +46,6 @@ public final class Complex implements MatrixElement {
 		assert false;
 		return null;
 	}
-	
 	@Override
 	public MatrixElement subt(MatrixElement other) {
 			if (other instanceof Fraction)
@@ -66,7 +63,6 @@ public final class Complex implements MatrixElement {
 			assert false;
 			return null;
 	}
-	
 	@Override
 	public MatrixElement mult(MatrixElement other) {
 			if (other instanceof Fraction) 
@@ -84,7 +80,6 @@ public final class Complex implements MatrixElement {
 			assert false;
 			return null;
 	}
-	
 	@Override
 	public MatrixElement div(MatrixElement other) {
 			return Fraction.of(this, other);
@@ -96,7 +91,6 @@ public final class Complex implements MatrixElement {
 	public String toString() {
 		return strings()[0];
 	}
-	
 	@Override
 	public String[] strings() {
 		StringBuilder builder = new StringBuilder();
@@ -122,7 +116,6 @@ public final class Complex implements MatrixElement {
 			" ".repeat(str.length()),
 		};
 	}
-	
 	@Override
 	public int compareTo(MatrixElement other) {
 		if (other instanceof Fraction)
@@ -135,7 +128,6 @@ public final class Complex implements MatrixElement {
 		assert false;
 		return 0;
 	}
-	
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Complex) {
@@ -144,12 +136,10 @@ public final class Complex implements MatrixElement {
 		}
 		return false;
 	}
-	
 	@Override
 	public boolean equals(int other) {
 		return real == other && imag == 0;
 	}
-	
 	@Override
 	public int hashCode() {
 		int result = Integer.hashCode(real);
