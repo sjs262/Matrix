@@ -51,7 +51,7 @@ public class VectorSpace {
 			for (int j = 0; j < vectors.length; j++) {
 				resultStrings[i].append(strings[j][i]);
 				if (j != vectors.length - 1) {
-					resultStrings[i].append((i == (2 * dim - 1) / 2) ? (" + " + ((char) ('a' + j))) : "    ");
+					resultStrings[i].append((i == (2 * dim - 1) / 2) ? (" + " + ((char) ('b' + j))) : "    ");
 				} else {
 					resultStrings[i].append((i == (2 * dim - 1) / 2) ? expression : " ".repeat(expression.length()));
 				}

@@ -237,20 +237,21 @@ public class Main {
 		// print(m.pNorm(2));
 		// print(m.rowSpace());
 		
-		// Matrix m = M(new MatrixElement[][] {
-		// 	{ I(-3), I(6), I(-1), I(1), I(-7) },
-		// 	{ I(1), I(-2), I(2), I(3), I(-1) },
-		// 	{ I(2), I(-4), I(5), I(8), I(-4) },
-		// });
-		// print(m.rref());
-		// print(m.nullSpace());
-		
-		Matrix m2 = M(new MatrixElement[][] {
-			{ I(3), I(0) },
-			{ I(0), I(-2) },
+		Matrix m = M(new MatrixElement[][] {
+			{ I(-3), I(6), I(-1), I(1), I(-7) },
+			{ I(1), I(-2), I(2), I(3), I(-1) },
+			{ I(2), I(-4), I(5), I(8), I(-4) },
 		});
-		print(m2 + "\n");
-		m2.svd();
+		print(m + "\n");
+		print(m.rref() + "\n");
+		print(m.nullSpace());
+		
+		// Matrix m2 = M(new MatrixElement[][] {
+		// 	{ I(3), I(0) },
+		// 	{ I(0), I(-2) },
+		// });
+		// print(m2 + "\n");
+		// m2.svd();
 	}
 	
 	public static Complex C(int r, int i) {
