@@ -358,17 +358,11 @@ public class Matrix {
 		// A = UΣV*
 		// A*A = V(Σ^2)(V*)
 		// AA* = U(Σ^2)(U*)
-		Matrix AAst = mult(adj()).ref();
-		MatrixElement[] AAstEigVals = AAst.diagonalElements();
-		System.out.println(Arrays.toString(AAstEigVals));
+		Matrix AAst = mult(adj());
+		System.out.println("AA* = \n" + AAst);
 		
-		Matrix AstA = adj().mult(this).ref();
-		MatrixElement[] AstAEigVals = AstA.diagonalElements();
-		System.out.println(Arrays.toString(AstAEigVals));
-		VectorSpace[] AstAnullspaces = Arrays.stream(AstAEigVals)
-			.map(e -> AstA.subt(identity(n).mult(e)).nullSpace())
-			.toArray(VectorSpace[]::new);
-		System.out.println(Arrays.toString(AstAnullspaces));
+		Matrix AstA = adj().mult(this);
+		System.out.println("A*A = \n" + AstA);
 	}
 	
 	/* Utility Methods */
